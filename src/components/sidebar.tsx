@@ -1,15 +1,18 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Plus, MessageSquare, Image as ImageIcon, LogOut } from 'lucide-react';
+import { Plus, MessageSquare, Image as ImageIcon, LogOut, ChevronDown, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, useAuthHydration } from '@/stores/auth-store';
 import { useLogout } from '@/hooks/use-auth';
+import { getSessions, type SessionListItem } from '@/lib/api/chat';
 import Image from 'next/image';
 
 interface SidebarProps {
   user?: {
+    id: string;
     name: string;
     email: string;
   } | null;
@@ -17,10 +20,34 @@ interface SidebarProps {
 
 export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
+  const isHydrated = useAuthHydration();
   const { user: storeUser } = useAuthStore();
   const logout = useLogout();
 
-  const currentUser = user || storeUser;
+  const currentUser = isHydrated ? (user || storeUser) : null;
+
+  const [sessions, setSessions] = useState<SessionListItem[]>([]);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
+  const [isChatExpanded, setIsChatExpanded] = useState(true);
+
+  // Fetch sessions when user is available and hydrated
+  useEffect(() => {
+    async function fetchSessions() {
+      if (!isHydrated || !currentUser?.id) return;
+
+      setIsLoadingSessions(true);
+      try {
+        const data = await getSessions(currentUser.id);
+        setSessions(data);
+      } catch (err) {
+        console.error('Failed to fetch sessions:', err);
+      } finally {
+        setIsLoadingSessions(false);
+      }
+    }
+
+    fetchSessions();
+  }, [isHydrated, currentUser?.id]);
 
   const getInitials = (name: string) => {
     return name
@@ -29,6 +56,17 @@ export function Sidebar({ user }: SidebarProps) {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const formatSessionDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return '오늘';
+    if (diffDays === 1) return '어제';
+    if (diffDays < 7) return `${diffDays}일 전`;
+    return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
   };
 
   return (
@@ -66,18 +104,59 @@ export function Sidebar({ user }: SidebarProps) {
           Menu
         </p>
 
-        <Link
-          href="/chat/new"
-          className={cn(
-            'w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all',
-            pathname?.startsWith('/chat')
-              ? 'bg-primary-1 text-primary-2'
-              : 'text-neutral-2 hover:bg-neutral-1 hover:text-neutral-3'
+        {/* Chat Section with Expandable Sessions */}
+        <div>
+          <button
+            onClick={() => setIsChatExpanded(!isChatExpanded)}
+            className={cn(
+              'w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all',
+              pathname?.startsWith('/chat')
+                ? 'bg-primary-1 text-primary-2'
+                : 'text-neutral-2 hover:bg-neutral-1 hover:text-neutral-3'
+            )}
+          >
+            <MessageSquare size={18} className="shrink-0" />
+            <span className="flex-1 text-left">Chat</span>
+            <ChevronDown
+              size={16}
+              className={cn(
+                'shrink-0 transition-transform',
+                isChatExpanded ? 'rotate-180' : ''
+              )}
+            />
+          </button>
+
+          {/* Sessions List */}
+          {isChatExpanded && (
+            <div className="mt-1 ml-4 space-y-0.5">
+              {isLoadingSessions ? (
+                <div className="flex items-center gap-2 px-3 py-2 text-xs text-neutral-2">
+                  <Loader2 size={14} className="animate-spin" />
+                  <span>로딩 중...</span>
+                </div>
+              ) : sessions.length === 0 ? (
+                <p className="px-3 py-2 text-xs text-neutral-2">
+                  채팅 기록이 없습니다
+                </p>
+              ) : (
+                sessions.slice(0, 10).map((session) => (
+                  <Link
+                    key={session.session_id}
+                    href={`/chat/${session.session_id}`}
+                    className={cn(
+                      'block px-3 py-2 text-xs rounded-lg truncate transition-colors',
+                      pathname === `/chat/${session.session_id}`
+                        ? 'bg-primary-1 text-primary-2 font-medium'
+                        : 'text-neutral-2 hover:bg-neutral-1 hover:text-neutral-3'
+                    )}
+                  >
+                    <span className="font-mono">#{session.session_id.slice(0, 8)}</span>
+                  </Link>
+                ))
+              )}
+            </div>
           )}
-        >
-          <MessageSquare size={18} className="shrink-0" />
-          <span>Chat</span>
-        </Link>
+        </div>
 
         <Link
           href="/creations"

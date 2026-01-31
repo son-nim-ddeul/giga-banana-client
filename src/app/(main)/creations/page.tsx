@@ -2,21 +2,31 @@
 
 import { ImageIcon, Loader2 } from 'lucide-react';
 import { useCreations } from '@/hooks/use-creations';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, useAuthHydration } from '@/stores/auth-store';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { CreationCard } from '@/components/creation-card';
 
 export default function CreationsPage() {
   const router = useRouter();
+  const isHydrated = useAuthHydration();
   const { isAuthenticated } = useAuthStore();
   const { data, isLoading, error } = useCreations();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isHydrated && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isHydrated, isAuthenticated, router]);
+
+  // Show loading while hydrating
+  if (!isHydrated) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-2" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return null;
