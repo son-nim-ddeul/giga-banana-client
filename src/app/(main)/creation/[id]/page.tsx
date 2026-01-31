@@ -8,6 +8,7 @@ import { ArrowLeft, Trash2, Clock, CheckCircle2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { use } from 'react';
+import { s3UriToImageUrl } from '@/lib/utils';
 
 interface CreationPageProps {
   params: Promise<{ id: string }>;
@@ -154,11 +155,12 @@ export default function CreationPage({ params }: CreationPageProps) {
             <div className="md:w-1/2 p-6 flex flex-col">
               <div className="relative aspect-square rounded-xl overflow-hidden bg-neutral-1">
                 <Image
-                  src={creation.image_url}
+                  src={s3UriToImageUrl(creation.image_url) || creation.image_url}
                   alt={title}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
+                  unoptimized
                 />
               </div>
               <div className="flex items-center justify-between mt-4">

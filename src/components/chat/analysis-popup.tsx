@@ -99,9 +99,8 @@ export function AnalysisPopup({
 
           {/* Tags */}
           <div
-            className="flex flex-wrap gap-2 justify-center overflow-y-auto"
+            className="flex flex-wrap gap-2 justify-center overflow-y-auto py-2"
             style={{
-              minHeight: tags.length <= 16 ? `${Math.ceil(tags.length / 4) * 36}px` : '120px',
               maxHeight: '120px',
             }}
           >

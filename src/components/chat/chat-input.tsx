@@ -55,15 +55,23 @@ export function ChatInput({
       uploadedImage?.previewUrl &&
       popupShownForImage !== uploadedImage.previewUrl
     ) {
-      setShowAnalysisPopup(true);
-      setPopupShownForImage(uploadedImage.previewUrl);
+      // Use setTimeout to avoid synchronous setState in effect
+      const timer = setTimeout(() => {
+        setShowAnalysisPopup(true);
+        setPopupShownForImage(uploadedImage.previewUrl);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [imageAnalysis?.tags, imageAnalysis?.isAnalyzing, uploadedImage?.previewUrl, popupShownForImage]);
 
   // Reset popup state when image is cleared
   useEffect(() => {
     if (!uploadedImage) {
-      setPopupShownForImage(null);
+      // Use setTimeout to avoid synchronous setState in effect
+      const timer = setTimeout(() => {
+        setPopupShownForImage(null);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [uploadedImage]);
 
