@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - DATABASE_HOST=${DATABASE_HOST}
+        - DATABASE_PORT=${DATABASE_PORT}
+        - DATABASE_USER=${DATABASE_USER}
+        - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+        - DATABASE_NAME=${DATABASE_NAME}
+        - JWT_SECRET=${JWT_SECRET}
+    container_name: giga-banana-client
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_HOST=${DATABASE_HOST}
+      - DATABASE_PORT=${DATABASE_PORT}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+    restart: unless-stopped
