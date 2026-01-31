@@ -36,6 +36,7 @@ export default function NewChatPage() {
     isUploading,
     uploadedImage,
     error,
+    imageAnalysis,
     sendMessage,
     uploadFile,
     clearUploadedImage,
@@ -111,6 +112,7 @@ export default function NewChatPage() {
               isUploading={isUploading}
               uploadedImage={uploadedImage}
               onClearImage={clearUploadedImage}
+              imageAnalysis={imageAnalysis}
               placeholder="만들고 싶은 이미지를 설명해주세요..."
             />
           </motion.div>

@@ -17,11 +17,12 @@ export interface SessionListItem {
 }
 
 export interface ChatMessage {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'analysis';
   content: string;
   image_url?: string;
   timestamp?: string;
   error_message?: string;
+  tags?: string[];  // For analysis messages
 }
 
 // Session Events API 응답 타입
@@ -237,4 +238,60 @@ export async function getSessions(userId: string): Promise<SessionListItem[]> {
 
   const data = await res.json();
   return data.sessions || data || [];
+}
+
+// Image Analysis API
+const IMAGE_ANALYSIS_URL = 'https://ui5lkk116duoen-8188.proxy.runpod.net/api/v2/tagger/images';
+
+export interface ImageAnalysisRequest {
+  top_n: number;
+  base64_image: string;
+}
+
+export interface ImageAnalysisResponse {
+  tags: string[];
+}
+
+/**
+ * Convert File to base64 string
+ */
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove data URL prefix (e.g., "data:image/png;base64,")
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Analyze image and get tags
+ * Takes ~10 seconds to complete
+ */
+export async function analyzeImage(file: File, topN: number = 15): Promise<string[]> {
+  const base64Image = await fileToBase64(file);
+
+  const res = await fetch(IMAGE_ANALYSIS_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      top_n: topN,
+      base64_image: base64Image,
+    } as ImageAnalysisRequest),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ error: '이미지 분석에 실패했습니다.' }));
+    throw new Error(error.error || error.message || '이미지 분석에 실패했습니다.');
+  }
+
+  const data: ImageAnalysisResponse = await res.json();
+  return data.tags || [];
 }

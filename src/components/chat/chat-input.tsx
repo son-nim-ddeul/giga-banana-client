@@ -1,15 +1,22 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { Send, ImageIcon, Loader2, X } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Send, ImageIcon, Loader2, X, Sparkles, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { AnalysisPopup } from './analysis-popup';
 
 interface UploadedImage {
   uri: string;
   previewUrl: string;
   mimeType: string;
   fileName: string;
+}
+
+interface ImageAnalysisState {
+  isAnalyzing: boolean;
+  tags: string[] | null;
+  error: string | null;
 }
 
 interface ChatInputProps {
@@ -21,6 +28,7 @@ interface ChatInputProps {
   onClearImage?: () => void;
   placeholder?: string;
   disabled?: boolean;
+  imageAnalysis?: ImageAnalysisState;
 }
 
 export function ChatInput({
@@ -32,9 +40,32 @@ export function ChatInput({
   onClearImage,
   placeholder = '만들고 싶은 이미지를 설명해주세요...',
   disabled = false,
+  imageAnalysis,
 }: ChatInputProps) {
   const [message, setMessage] = useState('');
+  const [showAnalysisPopup, setShowAnalysisPopup] = useState(false);
+  const [popupShownForImage, setPopupShownForImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Show popup when analysis completes (only once per image)
+  useEffect(() => {
+    if (
+      imageAnalysis?.tags &&
+      !imageAnalysis.isAnalyzing &&
+      uploadedImage?.previewUrl &&
+      popupShownForImage !== uploadedImage.previewUrl
+    ) {
+      setShowAnalysisPopup(true);
+      setPopupShownForImage(uploadedImage.previewUrl);
+    }
+  }, [imageAnalysis?.tags, imageAnalysis?.isAnalyzing, uploadedImage?.previewUrl, popupShownForImage]);
+
+  // Reset popup state when image is cleared
+  useEffect(() => {
+    if (!uploadedImage) {
+      setPopupShownForImage(null);
+    }
+  }, [uploadedImage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,9 +120,23 @@ export function ChatInput({
             <p className="text-sm font-medium text-neutral-3 truncate">
               {uploadedImage.fileName}
             </p>
-            <p className="text-xs text-neutral-2 mt-0.5">
-              {uploadedImage.mimeType} • 이미지가 첨부됩니다
-            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-xs text-neutral-2">
+                {uploadedImage.mimeType}
+              </span>
+              {imageAnalysis?.isAnalyzing && (
+                <span className="flex items-center gap-1 text-xs text-violet-600">
+                  <Sparkles className="w-3 h-3 animate-pulse" />
+                  분석 중...
+                </span>
+              )}
+              {imageAnalysis?.tags && !imageAnalysis.isAnalyzing && (
+                <span className="flex items-center gap-1 text-xs text-green-600">
+                  <Check className="w-3 h-3" />
+                  분석 완료
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Remove Button */}
@@ -209,7 +254,15 @@ export function ChatInput({
         </div>
       </div>
 
-
+      {/* Analysis Popup */}
+      {uploadedImage && imageAnalysis?.tags && (
+        <AnalysisPopup
+          isOpen={showAnalysisPopup}
+          onClose={() => setShowAnalysisPopup(false)}
+          imageUrl={uploadedImage.previewUrl}
+          tags={imageAnalysis.tags}
+        />
+      )}
     </form>
   );
 }

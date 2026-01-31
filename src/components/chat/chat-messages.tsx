@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { User, Bot, ImageOff } from 'lucide-react';
 import type { ChatMessage } from '@/lib/api/chat';
+import { AnalysisTags } from './analysis-tags';
+import { s3UriToImageUrl } from '@/lib/utils';
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
@@ -21,6 +23,11 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
       {messages.map((message, index) => {
         if (message.role === 'user') {
           return <UserMessage key={index} message={message} />;
+        }
+        if (message.role === 'analysis' && message.tags) {
+          return (
+            <AnalysisMessage key={index} title={message.content} tags={message.tags} />
+          );
         }
         return <AgentMessage key={index} message={message} />;
       })}
@@ -63,6 +70,9 @@ function MessageImage({ imageUrl }: { imageUrl: string }) {
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // S3 URI를 실제 이미지 URL로 변환
+  const actualImageUrl = s3UriToImageUrl(imageUrl) || imageUrl;
+
   if (imageError) {
     return (
       <div className="mb-3">
@@ -74,7 +84,7 @@ function MessageImage({ imageUrl }: { imageUrl: string }) {
   return (
     <div className="mb-3 relative w-[200px] h-[200px] rounded-xl overflow-hidden bg-neutral-1">
       <Image
-        src={imageUrl}
+        src={actualImageUrl}
         alt="Attached"
         fill
         className="object-cover"
@@ -117,6 +127,19 @@ function UserMessage({ message }: { message: ChatMessage }) {
           <p className="whitespace-pre-wrap leading-relaxed text-gray-800">{message.content}</p>
         </div>
       ) : null}
+    </motion.div>
+  );
+}
+
+// 분석 결과 메시지 컴포넌트
+function AnalysisMessage({ title, tags }: { title: string; tags: string[] }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="px-4"
+    >
+      <AnalysisTags title={title} tags={tags} delay={0} tagInterval={300} />
     </motion.div>
   );
 }

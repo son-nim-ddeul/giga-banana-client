@@ -28,6 +28,7 @@ export default function ChatPage({ params }: ChatPageProps) {
     isUploading,
     uploadedImage,
     error,
+    imageAnalysis,
     sendMessage,
     uploadFile,
     clearUploadedImage,
@@ -157,6 +158,7 @@ export default function ChatPage({ params }: ChatPageProps) {
             isUploading={isUploading}
             uploadedImage={uploadedImage}
             onClearImage={clearUploadedImage}
+            imageAnalysis={imageAnalysis}
             placeholder="이미지 생성 또는 편집을 요청하세요..."
           />
         </motion.div>

@@ -5,6 +5,7 @@ import {
   uploadImage,
   createSession,
   sendChatMessage,
+  analyzeImage,
   type ChatMessage,
   type ChatRunRequest,
   type UploadResult,
@@ -21,6 +22,13 @@ interface UploadedImage {
   previewUrl: string; // Local blob URL for preview display
   mimeType: string;
   fileName: string;
+  file: File;         // Original file for analysis
+}
+
+interface ImageAnalysisState {
+  isAnalyzing: boolean;
+  tags: string[] | null;
+  error: string | null;
 }
 
 interface UseChatReturn {
@@ -30,6 +38,7 @@ interface UseChatReturn {
   isUploading: boolean;
   uploadedImage: UploadedImage | null;
   error: string | null;
+  imageAnalysis: ImageAnalysisState;
 
   // Actions
   sendMessage: (content: string) => Promise<void>;
@@ -49,10 +58,18 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Image analysis state
+  const [imageAnalysis, setImageAnalysis] = useState<ImageAnalysisState>({
+    isAnalyzing: false,
+    tags: null,
+    error: null,
+  });
+
   const sessionIdRef = useRef<string | null>(initialSessionId || null);
+  const analysisPromiseRef = useRef<Promise<string[]> | null>(null);
 
   /**
-   * Upload a file and return the upload result
+   * Upload a file and start background analysis
    */
   const uploadFile = useCallback(
     async (file: File): Promise<UploadResult | null> => {
@@ -64,6 +81,13 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       setIsUploading(true);
       setError(null);
 
+      // Reset analysis state
+      setImageAnalysis({
+        isAnalyzing: true,
+        tags: null,
+        error: null,
+      });
+
       try {
         const result = await uploadImage(file, user.id);
         setUploadedImage({
@@ -71,11 +95,37 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           previewUrl: result.previewUrl,
           mimeType: result.mimeType,
           fileName: result.fileName,
+          file: file, // Keep the original file for analysis
         });
+
+        // Start background image analysis (don't await)
+        analysisPromiseRef.current = analyzeImage(file, 15);
+        analysisPromiseRef.current
+          .then((tags) => {
+            setImageAnalysis({
+              isAnalyzing: false,
+              tags,
+              error: null,
+            });
+          })
+          .catch((err) => {
+            console.error('Image analysis failed:', err);
+            setImageAnalysis({
+              isAnalyzing: false,
+              tags: null,
+              error: err instanceof Error ? err.message : '이미지 분석에 실패했습니다.',
+            });
+          });
+
         return result;
       } catch (err) {
         const message = err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.';
         setError(message);
+        setImageAnalysis({
+          isAnalyzing: false,
+          tags: null,
+          error: null,
+        });
         return null;
       } finally {
         setIsUploading(false);
@@ -92,6 +142,12 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       URL.revokeObjectURL(uploadedImage.previewUrl);
     }
     setUploadedImage(null);
+    setImageAnalysis({
+      isAnalyzing: false,
+      tags: null,
+      error: null,
+    });
+    analysisPromiseRef.current = null;
   }, [uploadedImage?.previewUrl]);
 
   /**
@@ -199,6 +255,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     isUploading,
     uploadedImage,
     error,
+    imageAnalysis,
     sendMessage,
     uploadFile,
     clearUploadedImage,
