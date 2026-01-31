@@ -167,14 +167,17 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       setIsLoading(true);
       setError(null);
 
-      // Add user message to UI immediately (use preview URL for display)
+      // Add user message to UI immediately (use S3 URI for persistence)
       const userMessage: ChatMessage = {
         role: 'user',
         content: content.trim(),
-        image_url: uploadedImage?.previewUrl || undefined,
+        image_url: uploadedImage?.uri || undefined, // Use S3 URI instead of blob URL
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, userMessage]);
+
+      // Clear uploaded image immediately when sending message
+      clearUploadedImage();
 
       try {
         let currentSessionId = sessionIdRef.current;
@@ -234,9 +237,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
-
-        // Clear uploaded image after sending
-        clearUploadedImage();
       } catch (err) {
         const message = err instanceof Error ? err.message : '메시지 전송에 실패했습니다.';
         setError(message);

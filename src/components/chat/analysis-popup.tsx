@@ -24,7 +24,11 @@ export function AnalysisPopup({
   // Reset visible tags when popup opens
   useEffect(() => {
     if (isOpen) {
-      setVisibleTags(0);
+      // Use setTimeout to avoid synchronous setState in effect
+      const timer = setTimeout(() => {
+        setVisibleTags(0);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -94,10 +98,16 @@ export function AnalysisPopup({
           </div>
 
           {/* Tags */}
-          <div className="flex flex-wrap gap-2 justify-center min-h-[80px]">
+          <div
+            className="flex flex-wrap gap-2 justify-center overflow-y-auto"
+            style={{
+              minHeight: tags.length <= 16 ? `${Math.ceil(tags.length / 4) * 36}px` : '120px',
+              maxHeight: '120px',
+            }}
+          >
             <AnimatePresence>
               {tags.slice(0, visibleTags).map((tag, index) => (
-                <motion.span
+                <motion.div
                   key={`${tag}-${index}`}
                   initial={{ opacity: 0, scale: 0.5, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -105,10 +115,10 @@ export function AnalysisPopup({
                     duration: 0.3,
                     ease: [0.34, 1.56, 0.64, 1], // Bouncy easing
                   }}
-                  className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 border border-violet-200/50 shadow-sm"
+                  className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 border border-violet-200/50 shadow-sm"
                 >
                   {tag}
-                </motion.span>
+                </motion.div>
               ))}
             </AnimatePresence>
           </div>
@@ -133,13 +143,21 @@ export function AnalysisPopup({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-6 flex justify-center"
+              className="mt-6 flex flex-col items-center gap-3"
             >
+              <div className="text-center">
+                <p className="text-sm text-neutral-2 mb-1">
+                  AI를 통해 이미지를 분석 완료했어요 ✨
+                </p>
+                <p className="text-sm font-medium text-neutral-3">
+                  분석 결과를 적용할까요?
+                </p>
+              </div>
               <button
                 onClick={onClose}
                 className="px-6 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-medium hover:from-violet-600 hover:to-purple-700 transition-all shadow-lg shadow-violet-200"
               >
-                확인
+                적용
               </button>
             </motion.div>
           )}
