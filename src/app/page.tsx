@@ -16,9 +16,9 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { Footer } from '@/components/footer';
-import { BananaLogo } from '@/components/banana-logo';
 import { LandingNav } from '@/components/landing-nav';
 import { ComparisonSlider } from '@/components/comparison-slider';
+import Image from 'next/image';
 
 const features = [
   {
@@ -112,26 +112,14 @@ export default function Home() {
               <button
                 onClick={handleStart}
                 disabled={isLoading}
-                className="group flex items-center justify-center gap-2 bg-primary-2 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:translate-y-[-2px] transition-all shadow-lg hover:shadow-xl hover:bg-primary-3 disabled:opacity-80"
+                className="group flex items-center justify-center gap-2 bg-primary-2 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:translate-y-[-2px] transition-all shadow-lg hover:shadow-xl hover:bg-primary-3 disabled:opacity-80 cursor-pointer"
               >
                 {isLoading ? '확인 중...' : '무료로 시작하기'}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button className="flex items-center justify-center gap-2 bg-white text-neutral-3 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-neutral-100 transition-all border border-neutral-1">
+              <button className="flex items-center justify-center gap-2 bg-white text-neutral-3 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 hover:border-gray-300 hover:shadow-md transition-all border border-neutral-1 cursor-pointer">
                 데모 보기
               </button>
-            </div>
-
-            <div className="mt-12 flex items-center gap-4 text-sm text-neutral-2">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="w-8 h-8 rounded-full border-2 border-white bg-primary-1"
-                  />
-                ))}
-              </div>
-              <span>이미 10,000+ 명의 크리에이터가 사용 중</span>
             </div>
           </motion.div>
 
@@ -236,11 +224,11 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-10">
               <button
                 onClick={handleStart}
-                className="w-full sm:w-auto px-10 py-5 bg-white text-primary-2 font-bold text-xl rounded-2xl hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+                className="w-full sm:w-auto px-10 py-5 bg-white text-primary-2 font-bold text-xl rounded-2xl hover:shadow-2xl hover:scale-105 hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
               >
                 지금 시작하기
               </button>
-              <button className="w-full sm:w-auto px-10 py-5 border-2 border-white/30 text-white font-bold text-xl rounded-2xl hover:bg-white/10 transition-all">
+              <button className="w-full sm:w-auto px-10 py-5 border-2 border-white/30 text-white font-bold text-xl rounded-2xl hover:bg-white/20 hover:border-white/50 hover:scale-105 active:scale-95 transition-all cursor-pointer">
                 가격 정책 확인
               </button>
             </div>
@@ -262,7 +250,7 @@ export default function Home() {
       <footer className="py-12 border-t border-neutral-1">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2 font-bold text-xl">
-            <BananaLogo size="sm" animated={false} />
+            <Image src="/giga_banana.png" alt="Giga Banana" width={42} height={42} className="object-contain" />
             <span className="text-neutral-3">Giga Banana</span>
           </div>
           <Footer />

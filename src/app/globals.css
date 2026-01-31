@@ -49,7 +49,7 @@
   --color-neutral-2: var(--neutral-2);
   --color-neutral-3: var(--neutral-3);
   
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "Wanted Sans Variable", "Wanted Sans", var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
@@ -63,7 +63,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Wanted Sans Variable", "Wanted Sans", sans-serif;
 }
 
 /* Custom colored shadows */

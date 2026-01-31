@@ -34,7 +34,7 @@ export function UseCases({ useCases, onImageClick }: UseCasesProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-            className="group bg-white rounded-3xl overflow-hidden border border-neutral-1 hover:shadow-xl transition-all cursor-pointer hover:-translate-y-1"
+            className="group bg-white rounded-3xl overflow-hidden border border-neutral-1 hover:shadow-xl transition-all hover:-translate-y-1 select-none"
             onClick={() => onImageClick?.(useCase.image)}
           >
             <div className="aspect-video bg-neutral-1 overflow-hidden relative">

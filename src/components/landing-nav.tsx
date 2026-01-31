@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { BananaLogo } from './banana-logo';
+import Image from 'next/image';
 
 interface LandingNavProps {
   onStartClick: () => void;
@@ -13,7 +13,7 @@ export function LandingNav({ onStartClick }: LandingNavProps) {
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
-          <BananaLogo size="sm" animated={false} />
+          <Image src="/giga_banana.png" alt="Giga Banana" width={42} height={42} className="object-contain" />
           <span className="text-neutral-3">Giga Banana</span>
         </Link>
 
@@ -27,7 +27,7 @@ export function LandingNav({ onStartClick }: LandingNavProps) {
           </a>
           <button
             onClick={onStartClick}
-            className="bg-primary-2 text-white px-6 py-2.5 rounded-full font-bold hover:bg-primary-3 transition-all shadow-sm"
+            className="bg-primary-2 text-white px-6 py-2.5 rounded-full font-bold hover:bg-primary-3 hover:shadow-lg hover:scale-105 active:scale-95 transition-all shadow-sm cursor-pointer"
           >
             Start Creating
           </button>

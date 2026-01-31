@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth-store';
+import { fetchJson } from '@/lib/fetch';
 
 interface Creation {
   id: string;
@@ -15,28 +16,17 @@ interface CreationsResponse {
   creations: Creation[];
 }
 
-async function fetchCreations(accessToken: string): Promise<CreationsResponse> {
-  const res = await fetch('/api/creations', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || '데이터를 불러올 수 없습니다.');
-  }
-
-  return res.json();
+async function fetchCreations(): Promise<CreationsResponse> {
+  return fetchJson<CreationsResponse>('/api/creations');
 }
 
 export function useCreations() {
-  const { accessToken, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   return useQuery({
     queryKey: ['creations'],
-    queryFn: () => fetchCreations(accessToken!),
-    enabled: isAuthenticated && !!accessToken,
+    queryFn: fetchCreations,
+    enabled: isAuthenticated,
     staleTime: 30 * 1000, // 30초
   });
 }
@@ -45,28 +35,17 @@ interface CreationResponse {
   creation: Creation;
 }
 
-async function fetchCreation(id: string, accessToken: string): Promise<CreationResponse> {
-  const res = await fetch(`/api/creations/${id}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || '데이터를 불러올 수 없습니다.');
-  }
-
-  return res.json();
+async function fetchCreation(id: string): Promise<CreationResponse> {
+  return fetchJson<CreationResponse>(`/api/creations/${id}`);
 }
 
 export function useCreation(id: string) {
-  const { accessToken, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
 
   return useQuery({
     queryKey: ['creation', id],
-    queryFn: () => fetchCreation(id, accessToken!),
-    enabled: isAuthenticated && !!accessToken && !!id,
+    queryFn: () => fetchCreation(id),
+    enabled: isAuthenticated && !!id,
     staleTime: 30 * 1000,
   });
 }

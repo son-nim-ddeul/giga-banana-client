@@ -69,7 +69,7 @@ export default function NewChatPage() {
   return (
     <>
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 py-12">
+      <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 py-24 pt-[480px]">
         <div className="max-w-4xl w-full">
           {/* Main Heading */}
           <motion.div

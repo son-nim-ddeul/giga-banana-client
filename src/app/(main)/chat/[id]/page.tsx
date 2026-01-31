@@ -84,7 +84,7 @@ export default function ChatPage({ params }: ChatPageProps) {
         <div className="flex items-center">
           <Link
             href="/chat/new"
-            className="flex items-center gap-2 text-neutral-2 hover:text-neutral-3 transition-colors mr-4 p-2 hover:bg-neutral-1 rounded-lg"
+            className="flex items-center gap-2 text-neutral-2 hover:text-neutral-3 hover:bg-gray-100 hover:scale-105 active:scale-95 transition-all mr-4 p-2 rounded-lg cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
@@ -95,7 +95,7 @@ export default function ChatPage({ params }: ChatPageProps) {
 
         <Link
           href="/chat/new"
-          className="flex items-center gap-2 px-4 py-2 bg-primary-1 hover:bg-primary-2/20 text-primary-2 rounded-xl text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-primary-1 hover:bg-primary-2/30 hover:shadow-md hover:scale-105 active:scale-95 text-primary-2 rounded-xl text-sm font-medium transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>새 채팅</span>

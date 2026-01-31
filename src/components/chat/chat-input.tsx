@@ -124,29 +124,43 @@ export function ChatInput({
           className="hidden"
         />
 
-        <button
-          type="button"
-          onClick={handleFileClick}
-          disabled={isUploading || disabled}
+        {/* Gradient Border Button */}
+        <div
           className={cn(
-            'flex items-center gap-2 px-4 py-2 bg-white border border-neutral-1 rounded-xl text-sm font-medium transition-colors cursor-pointer',
+            'relative p-[2px] rounded-xl bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 transition-all',
             isUploading || disabled
-              ? 'text-neutral-2 cursor-not-allowed opacity-50'
-              : 'text-neutral-3 hover:bg-gray-200'
+              ? 'opacity-50'
+              : 'hover:from-blue-500 hover:via-purple-500 hover:to-pink-500 hover:shadow-lg hover:shadow-purple-200 hover:scale-102'
           )}
         >
-          {isUploading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>업로드 중...</span>
-            </>
-          ) : (
-            <>
-              <ImageIcon className="w-4 h-4" />
-              <span>이미지 편집</span>
-            </>
-          )}
-        </button>
+          <button
+            type="button"
+            onClick={handleFileClick}
+            disabled={isUploading || disabled}
+            className={cn(
+              'flex items-center gap-2 px-4 py-2 bg-white rounded-[10px] text-sm font-medium transition-all cursor-pointer w-full',
+              isUploading || disabled
+                ? 'text-neutral-2 cursor-not-allowed'
+                : 'text-neutral-3 hover:bg-gray-50'
+            )}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+                <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent font-semibold">
+                  업로드 중...
+                </span>
+              </>
+            ) : (
+              <>
+                <ImageIcon className="w-4 h-4 text-purple-500" />
+                <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold">
+                  이미지 편집
+                </span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
 
@@ -162,7 +176,7 @@ export function ChatInput({
         </div>
 
         {/* Input Box - on top of the shadow */}
-        <div className="relative bg-white rounded-3xl border-2 border-neutral-1 shadow-lg hover:shadow-xl transition-all focus-within:border-primary-2 focus-within:ring-4 focus-within:ring-primary-2/10 z-10">
+        <div className="relative bg-white rounded-3xl border-2 border-neutral-1 shadow-lg hover:shadow-xl transition-all focus-within:border-purple-200 focus-within:ring-4 focus-within:ring-purple-100/50 z-10">
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -180,7 +194,7 @@ export function ChatInput({
             className={cn(
               'absolute bottom-6 right-6 w-10 h-10 rounded-xl flex items-center justify-center transition-all z-10',
               canSubmit
-                ? 'bg-primary-2 text-white hover:bg-primary-3 hover:scale-110 shadow-lg'
+                ? 'bg-primary-2 text-white hover:bg-primary-3 hover:scale-105 shadow-lg'
                 : 'bg-neutral-1 text-neutral-2 cursor-not-allowed'
             )}
           >

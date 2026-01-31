@@ -72,26 +72,26 @@ export function Sidebar({ user }: SidebarProps) {
   return (
     <aside className="w-64 border-r border-neutral-1 bg-white flex flex-col shrink-0">
       {/* Logo */}
-      <div className="p-6 flex items-center gap-3">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-pink-100 rounded-2xl mb-4 overflow-hidden">
+      <Link href="/" className="p-2 flex items-center gap-1">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl">
           <Image
             src="/giga_banana.png"
             alt="Giga Banana"
-            width={64}
-            height={64}
+            width={42}
+            height={42}
             className="object-contain"
           />
         </div>
         <span className="font-bold text-xl tracking-tight text-neutral-3">
           Giga Banana
         </span>
-      </div>
+      </Link>
 
       {/* New Chat Button */}
       <div className="px-4 mb-6">
         <Link
           href="/chat/new"
-          className="w-full py-2 px-4 bg-primary-2 text-white font-semibold text-sm rounded-xl hover:bg-primary-3 transition-all flex items-center justify-center gap-2 shadow-sm"
+          className="w-full py-2 px-4 bg-primary-2 text-white font-semibold text-sm rounded-xl hover:bg-primary-3 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
         >
           <Plus size={18} />
           <span>New Chat</span>
