@@ -19,9 +19,13 @@ export interface Message {
   createdAt: Date;
 }
 
-export interface Image {
-  id: string;
-  url: string;
-  prompt: string;
-  createdAt: Date;
+
+export interface Creation {
+  creation_id: string;
+  user_id: string;
+  workflow?: string | null;
+  metadata?: string | null;
+  image_url: string;
+  created_date: Date;
+  status: 'active' | 'deleted';
 }

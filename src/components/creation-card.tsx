@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-interface ImageCardProps {
+interface CreationCardProps {
   id: string;
-  url: string;
+  image_url: string;
   title: string;
   createdAt: string;
 }
@@ -20,28 +20,20 @@ function formatRelativeTime(dateString: string) {
   return `${Math.floor(days / 30)}개월 전`;
 }
 
-export function ImageCard({ id, url, title, createdAt }: ImageCardProps) {
+export function CreationCard({ id, image_url, title, createdAt }: CreationCardProps) {
   return (
-    <Link href={`/image/${id}`} className="group block">
+    <Link href={`/creation/${id}`} className="group block">
       <div className="bg-white rounded-2xl overflow-hidden border border-neutral-1 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-neutral-1">
           <Image
-            src={url}
+            src={image_url}
             alt={title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-
-        {/* Info */}
-        <div className="p-4">
-          <h3 className="font-semibold text-neutral-3 text-base mb-1 truncate group-hover:text-primary-2 transition-colors">
-            {title}
-          </h3>
-          <p className="text-xs text-neutral-2">{formatRelativeTime(createdAt)}</p>
+          <div className="absolute inset-0 bg-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
       </div>
     </Link>
