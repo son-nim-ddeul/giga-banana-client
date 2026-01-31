@@ -218,16 +218,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           request.image_upload_mime_type = uploadedImage.mimeType || 'image/jpeg';
         }
 
-        // 메시지 전송 시작 (비동기로 처리)
-        const messagePromise = sendChatMessage(request);
-
-        // 새 세션이면 페이지 이동 (메시지 전송은 백그라운드에서 계속)
-        if (!initialSessionId && currentSessionId) {
-          router.push(`/chat/${currentSessionId}`);
-        }
-
-        // 메시지 전송 완료 대기
-        const response = await messagePromise;
+        // 메시지 전송 및 응답 대기
+        const response = await sendChatMessage(request);
 
         // Add assistant response
         const assistantMessage: ChatMessage = {
@@ -237,6 +229,11 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
+
+        // 새 세션이면 응답 받은 후 페이지 이동
+        if (!initialSessionId && currentSessionId) {
+          router.push(`/chat/${currentSessionId}`);
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : '메시지 전송에 실패했습니다.';
         setError(message);

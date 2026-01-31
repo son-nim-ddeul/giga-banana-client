@@ -7,6 +7,7 @@ import { User, Bot, ImageOff } from 'lucide-react';
 import type { ChatMessage } from '@/lib/api/chat';
 import { AnalysisTags } from './analysis-tags';
 import { s3UriToImageUrl } from '@/lib/utils';
+import { ImagePreviewModal } from './image-preview-modal';
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
@@ -14,6 +15,8 @@ interface ChatMessagesProps {
 }
 
 export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
   if (messages.length === 0 && !isLoading) {
     return null;
   }
@@ -22,14 +25,14 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
     <div className="flex flex-col gap-6 py-6">
       {messages.map((message, index) => {
         if (message.role === 'user') {
-          return <UserMessage key={index} message={message} />;
+          return <UserMessage key={index} message={message} onImageClick={setPreviewImage} />;
         }
         if (message.role === 'analysis' && message.tags) {
           return (
             <AnalysisMessage key={index} title={message.content} tags={message.tags} />
           );
         }
-        return <AgentMessage key={index} message={message} />;
+        return <AgentMessage key={index} message={message} onImageClick={setPreviewImage} />;
       })}
 
       {/* Loading indicator */}
@@ -51,6 +54,15 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
           </div>
         </motion.div>
       )}
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <ImagePreviewModal
+          isOpen={!!previewImage}
+          onClose={() => setPreviewImage(null)}
+          imageUrl={previewImage}
+        />
+      )}
     </div>
   );
 }
@@ -66,7 +78,7 @@ function ImagePlaceholder() {
 }
 
 // 공통 이미지 컴포넌트
-function MessageImage({ imageUrl }: { imageUrl: string }) {
+function MessageImage({ imageUrl, onClick }: { imageUrl: string; onClick?: (url: string) => void }) {
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -82,7 +94,10 @@ function MessageImage({ imageUrl }: { imageUrl: string }) {
   }
 
   return (
-    <div className="mb-3 relative w-[200px] h-[200px] rounded-xl overflow-hidden bg-neutral-1">
+    <div
+      className="mb-3 relative w-[200px] h-[200px] rounded-xl overflow-hidden bg-neutral-1 cursor-pointer hover:opacity-90 transition-opacity"
+      onClick={() => onClick?.(imageUrl)}
+    >
       <Image
         src={actualImageUrl}
         alt="Attached"
@@ -102,7 +117,7 @@ function MessageImage({ imageUrl }: { imageUrl: string }) {
 }
 
 // 유저 메시지 컴포넌트
-function UserMessage({ message }: { message: ChatMessage }) {
+function UserMessage({ message, onImageClick }: { message: ChatMessage; onImageClick?: (url: string) => void }) {
   const hasImage = !!message.image_url;
   const hasText = !!message.content?.trim();
 
@@ -116,7 +131,7 @@ function UserMessage({ message }: { message: ChatMessage }) {
       {hasImage && (
         <>
           <div className="flex justify-center items-center">
-            <MessageImage imageUrl={message.image_url!} />
+            <MessageImage imageUrl={message.image_url!} onClick={onImageClick} />
           </div>
         </>
       )}
@@ -148,7 +163,7 @@ function AnalysisMessage({ title, tags }: { title: string; tags: string[] }) {
 }
 
 // 에이전트 메시지 컴포넌트
-function AgentMessage({ message }: { message: ChatMessage }) {
+function AgentMessage({ message, onImageClick }: { message: ChatMessage; onImageClick?: (url: string) => void }) {
   const hasImage = !!message.image_url;
   const hasText = !!message.content?.trim();
 
@@ -166,7 +181,7 @@ function AgentMessage({ message }: { message: ChatMessage }) {
       {/* Message Content */}
       {hasImage ? (
         <div className="flex justify-center items-center">
-          <MessageImage imageUrl={message.image_url!} />
+          <MessageImage imageUrl={message.image_url!} onClick={onImageClick} />
         </div>
       ) : hasText ? (
         <div className="flex-1 max-w-[80%] rounded-2xl p-4 bg-neutral-1 text-neutral-3 rounded-tl-none">
