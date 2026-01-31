@@ -7,6 +7,7 @@ import { Input } from '../../../components/input';
 import { Button } from '../../../components/button';
 import { Footer } from '../../../components/footer';
 import Link from 'next/link';
+import { useSignup } from '@/hooks/use-auth';
 
 // Validation functions
 const validateEmail = (email: string): string | null => {
@@ -64,9 +65,10 @@ export default function SignupPage() {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [signupStatus, setSignupStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errors, setErrors] = useState<FormErrors>({});
+
+  const signupMutation = useSignup();
+  const serverError = signupMutation.error?.message;
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -95,26 +97,14 @@ export default function SignupPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    setIsLoading(true);
-    setSignupStatus('idle');
-
-    // Simulate API call
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Signup submitted:', { email, name, password });
-      setSignupStatus('success');
-    } catch {
-      setSignupStatus('error');
-    } finally {
-      setIsLoading(false);
-    }
+    signupMutation.mutate({ email, name, password });
   };
 
   return (
@@ -265,9 +255,13 @@ export default function SignupPage() {
                 }}
               />
 
+              {serverError && (
+                <p className="text-sm text-red-500 text-center">{serverError}</p>
+              )}
+
               <Button
-                isLoading={isLoading}
-                isSuccess={signupStatus === 'success'}
+                isLoading={signupMutation.isPending}
+                isSuccess={signupMutation.isSuccess}
                 loadingText="가입 중..."
                 successText="성공!"
               >

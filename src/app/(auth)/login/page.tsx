@@ -7,6 +7,7 @@ import { Input } from '../../../components/input';
 import { Button } from '../../../components/button';
 import { Footer } from '../../../components/footer';
 import Link from 'next/link';
+import { useLogin } from '@/hooks/use-auth';
 
 // Validation functions
 const validateEmail = (email: string): string | null => {
@@ -40,9 +41,11 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loginStatus, setLoginStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errors, setErrors] = useState<FormErrors>({});
+
+  const loginMutation = useLogin();
+
+  const serverError = loginMutation.error?.message;
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -61,26 +64,14 @@ export default function LoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    setIsLoading(true);
-    setLoginStatus('idle');
-
-    // Simulate API call
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Login submitted:', { email, password });
-      setLoginStatus('success');
-    } catch {
-      setLoginStatus('error');
-    } finally {
-      setIsLoading(false);
-    }
+    loginMutation.mutate({ email, password });
   };
 
   // @return
@@ -174,9 +165,13 @@ export default function LoginPage() {
               />
             </div>
 
+            {serverError && (
+              <p className="text-sm text-red-500 text-center">{serverError}</p>
+            )}
+
             <Button
-              isLoading={isLoading}
-              isSuccess={loginStatus === 'success'}
+              isLoading={loginMutation.isPending}
+              isSuccess={loginMutation.isSuccess}
               loadingText="로그인 중..."
               successText="성공!"
             >
