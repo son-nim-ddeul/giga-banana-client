@@ -2,10 +2,11 @@
 
 import React, { useState, FormEvent } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, Eye, EyeOff, PartyPopper } from 'lucide-react';
 import { Input } from '../../../components/input';
 import { Button } from '../../../components/button';
 import { Footer } from '../../../components/footer';
+import { Confetti } from '../../../components/confetti';
 import Link from 'next/link';
 import { useSignup } from '@/hooks/use-auth';
 
@@ -106,6 +107,67 @@ export default function SignupPage() {
 
     signupMutation.mutate({ email, name, password });
   };
+
+  if (signupMutation.isSuccess) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-neutral-1 p-4 font-sans">
+        <Confetti />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+          className="w-full max-w-md"
+        >
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-neutral-1">
+            <div className="p-8 text-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6"
+              >
+                <PartyPopper className="w-10 h-10 text-green-500" />
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-2xl font-bold text-neutral-3 mb-3"
+              >
+                가입을 환영합니다!
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-neutral-2 mb-8"
+              >
+                회원가입이 완료되었습니다.<br />
+                로그인하여 서비스를 이용해보세요.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center w-full h-12 bg-primary-2 text-white font-semibold rounded-xl hover:bg-primary-3 transition-colors duration-200"
+                >
+                  로그인 하러 가기
+                </Link>
+              </motion.div>
+            </div>
+          </div>
+
+          <Footer />
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-neutral-1 p-4 font-sans">

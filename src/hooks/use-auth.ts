@@ -77,21 +77,14 @@ export function useLogin() {
     mutationFn: loginApi,
     onSuccess: (data) => {
       setAuth(data.user, data.accessToken);
-      router.push('/chat/new');
+      router.push('/images');
     },
   });
 }
 
 export function useSignup() {
-  const { setAuth } = useAuthStore();
-  const router = useRouter();
-
   return useMutation({
     mutationFn: signupApi,
-    onSuccess: (data) => {
-      setAuth(data.user, data.accessToken);
-      router.push('/chat/new');
-    },
   });
 }
 

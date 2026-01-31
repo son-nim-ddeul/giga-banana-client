@@ -126,12 +126,6 @@ export default function LoginPage() {
                 <label className="text-sm font-medium text-neutral-3" htmlFor="password">
                   비밀번호
                 </label>
-                <button
-                  type="button"
-                  className="text-xs font-semibold text-primary-2 hover:text-primary-3 transition-colors duration-200 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-2/20 rounded px-1"
-                >
-                  비밀번호 찾기
-                </button>
               </div>
               <Input
                 id="password"
