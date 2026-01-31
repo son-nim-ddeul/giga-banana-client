@@ -56,19 +56,22 @@ jobs:
           SSH_USER: ${{ secrets.EC2_USERNAME }}
           SSH_PORT: "22"
         run: |
-          # Transfer Docker image and .env file to server
+          # Transfer Docker image and .env file to server (temporary location)
           scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P ${SSH_PORT} image.tar.gz $SSH_USER@$SSH_HOST:/tmp/
-          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P ${SSH_PORT} .env $SSH_USER@$SSH_HOST:~/app/.env
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P ${SSH_PORT} .env $SSH_USER@$SSH_HOST:/tmp/.env
 
           # SSH into server and deploy
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p ${SSH_PORT} $SSH_USER@$SSH_HOST << 'ENDSSH'
+            # Create app directory first
+            mkdir -p ~/app
+            cd ~/app
+            
+            # Move .env file to app directory
+            mv /tmp/.env ~/app/.env
+            
             # Load Docker image
             docker load < /tmp/image.tar.gz
             rm /tmp/image.tar.gz
-            
-            # Create app directory
-            mkdir -p ~/app
-            cd ~/app
             
             # Stop and remove existing container
             docker stop giga-banana-client || true
