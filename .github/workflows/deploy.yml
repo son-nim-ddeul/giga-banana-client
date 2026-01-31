@@ -56,12 +56,32 @@ jobs:
           SSH_USER: ${{ secrets.EC2_USERNAME }}
           SSH_PORT: "22"
         run: |
-          # Transfer Docker image and .env file to server (temporary location)
+          # Transfer Docker image, .env file, and nginx config to server
           scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P ${SSH_PORT} image.tar.gz $SSH_USER@$SSH_HOST:/tmp/
           scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P ${SSH_PORT} .env $SSH_USER@$SSH_HOST:/tmp/.env
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P ${SSH_PORT} nginx/giga-banana.conf $SSH_USER@$SSH_HOST:/tmp/giga-banana.conf
 
           # SSH into server and deploy
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p ${SSH_PORT} $SSH_USER@$SSH_HOST << 'ENDSSH'
+            # Install nginx if not installed
+            if ! command -v nginx &> /dev/null; then
+              sudo apt-get update
+              sudo apt-get install -y nginx
+            fi
+            
+            # Setup nginx configuration
+            sudo mv /tmp/giga-banana.conf /etc/nginx/sites-available/giga-banana
+            sudo ln -sf /etc/nginx/sites-available/giga-banana /etc/nginx/sites-enabled/
+            
+            # Remove default nginx site if exists
+            sudo rm -f /etc/nginx/sites-enabled/default
+            
+            # Test nginx configuration
+            sudo nginx -t
+            
+            # Reload nginx
+            sudo systemctl reload nginx || sudo systemctl restart nginx
+            
             # Create app directory first
             mkdir -p ~/app
             cd ~/app
