@@ -5,9 +5,9 @@
   --foreground: #171717;
   
   /* Primary Colors - 브랜드 메인 색상 */
-  --primary-1: #f5f6f0;  /* light */
-  --primary-2: #8a9352;  /* base */
-  --primary-3: #6f7642;  /* dark */
+  --primary-1: #ffe5e3;  /* light */
+  --primary-2: #ff6961;  /* base */
+  --primary-3: #e55a52;  /* dark */
   
   /* Error Colors */
   --error-1: #fee2e2;     /* light */

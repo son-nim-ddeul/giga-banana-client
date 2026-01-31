@@ -12,19 +12,18 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   rightIcon?: ReactNode;
   onValueChange?: (value: string) => void;
   onValidation?: (value: string) => string | null;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, icon, rightIcon, className, onValueChange, onValidation, onBlur, ...props }, ref) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       onValueChange?.(e.target.value);
-      props.onChange?.(e);
     };
 
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
       if (onValidation) {
-        const validationError = onValidation(e.target.value);
-        // 에러는 부모 컴포넌트에서 관리
+        onValidation(e.target.value);
       }
       onBlur?.(e);
     };

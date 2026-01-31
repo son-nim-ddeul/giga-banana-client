@@ -2,9 +2,11 @@
 
 import React, { useState, FormEvent } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { cn } from '../../../lib/utils';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Input } from '../../../components/input';
+import { Button } from '../../../components/button';
+import { Footer } from '../../../components/footer';
+import Link from 'next/link';
 
 // Validation functions
 const validateEmail = (email: string): string | null => {
@@ -172,30 +174,14 @@ export default function LoginPage() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={cn(
-                "group relative w-full py-3.5 px-4 border border-transparent rounded-xl text-sm font-bold text-white shadow-lg transition-all duration-200 transform focus:outline-none focus:ring-2 focus:ring-offset-2",
-                loginStatus === 'success'
-                  ? "bg-success-2 hover:bg-success-3 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] focus:ring-success-2"
-                  : "bg-primary-2 hover:bg-primary-3 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] focus:ring-primary-2/50",
-                isLoading && "opacity-80 cursor-not-allowed hover:scale-100"
-              )}
+            <Button
+              isLoading={isLoading}
+              isSuccess={loginStatus === 'success'}
+              loadingText="로그인 중..."
+              successText="성공!"
             >
-              <div className="flex items-center justify-center gap-2">
-                {isLoading ? <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>로그인 중...</span>
-                </> : loginStatus === 'success' ? <>
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span>성공!</span>
-                </> : <>
-                  <span>로그인</span>
-                  <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
-                </>}
-              </div>
-            </button>
+              로그인
+            </Button>
           </form>
 
           <div className="mt-8 text-center">
@@ -204,16 +190,16 @@ export default function LoginPage() {
               <button
                 className="font-bold text-primary-2 hover:text-primary-3 focus:outline-none focus:ring-2 focus:ring-primary-2/20 rounded px-1 transition-all duration-200 hover:underline"
               >
-                회원가입 하기
+                <Link href="/signup">
+                  회원가입 하기
+                </Link>
               </button>
             </p>
           </div>
         </div>
       </div>
 
-      <p className="mt-8 text-center text-xs text-neutral-2">
-        &copy; 2024 YourCompany. All rights reserved.
-      </p>
+      <Footer />
     </motion.div>
   </div>;
 };
