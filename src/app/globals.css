@@ -3,11 +3,52 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* Primary Colors - 브랜드 메인 색상 */
+  --primary-1: #f5f6f0;  /* light */
+  --primary-2: #8a9352;  /* base */
+  --primary-3: #6f7642;  /* dark */
+  
+  /* Error Colors */
+  --error-1: #fee2e2;     /* light */
+  --error-2: #ef4444;     /* base */
+  --error-3: #dc2626;     /* dark */
+  
+  /* Success Colors */
+  --success-1: #dcfce7;   /* light */
+  --success-2: #22c55e;   /* base */
+  --success-3: #16a34a;   /* dark */
+  
+  /* Neutral Colors (Gray) */
+  --neutral-1: #f3f4f6;   /* light */
+  --neutral-2: #6b7280;   /* base */
+  --neutral-3: #374151;   /* dark */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  
+  /* Primary Colors */
+  --color-primary-1: var(--primary-1);
+  --color-primary-2: var(--primary-2);
+  --color-primary-3: var(--primary-3);
+  
+  /* Error Colors */
+  --color-error-1: var(--error-1);
+  --color-error-2: var(--error-2);
+  --color-error-3: var(--error-3);
+  
+  /* Success Colors */
+  --color-success-1: var(--success-1);
+  --color-success-2: var(--success-2);
+  --color-success-3: var(--success-3);
+  
+  /* Neutral Colors */
+  --color-neutral-1: var(--neutral-1);
+  --color-neutral-2: var(--neutral-2);
+  --color-neutral-3: var(--neutral-3);
+  
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
