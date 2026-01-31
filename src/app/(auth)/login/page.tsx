@@ -8,6 +8,7 @@ import { Button } from '../../../components/button';
 import { Footer } from '../../../components/footer';
 import Link from 'next/link';
 import { useLogin } from '@/hooks/use-auth';
+import Image from 'next/image';
 
 // Validation functions
 const validateEmail = (email: string): string | null => {
@@ -89,8 +90,14 @@ export default function LoginPage() {
         <div className="p-8">
           {/* Header */}
           <div className="mb-8 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-1 rounded-2xl mb-4">
-              <Lock className="w-8 h-8 text-primary-2" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-pink-100 rounded-2xl mb-4 overflow-hidden">
+              <Image
+                src="/giga_banana.png"
+                alt="Giga Banana"
+                width={64}
+                height={64}
+                className="object-contain"
+              />
             </div>
             <h1 className="text-2xl font-bold text-neutral-3 mb-2">환영합니다</h1>
             <p className="text-neutral-2">계정에 로그인하여 서비스를 이용하세요</p>

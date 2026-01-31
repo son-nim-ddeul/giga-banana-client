@@ -124,9 +124,13 @@ export default function SignupPage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6"
+                className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-6 overflow-hidden"
               >
-                <PartyPopper className="w-10 h-10 text-green-500" />
+                <img 
+                  src="/giga_banana.png" 
+                  alt="Giga Banana" 
+                  className="w-full h-full object-contain"
+                />
               </motion.div>
 
               <motion.h1
@@ -189,8 +193,12 @@ export default function SignupPage() {
           <div className="p-8">
             {/* Header */}
             <div className="mb-8 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-1 rounded-2xl mb-4">
-                <User className="w-8 h-8 text-primary-2" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 overflow-hidden">
+                <img 
+                  src="/giga_banana.png" 
+                  alt="Giga Banana" 
+                  className="w-full h-full object-contain"
+                />
               </div>
               <h1 className="text-2xl font-bold text-neutral-3 mb-2">회원가입</h1>
               <p className="text-neutral-2">새로운 계정을 만들어 서비스를 시작하세요</p>

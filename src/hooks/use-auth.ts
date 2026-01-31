@@ -77,7 +77,7 @@ export function useLogin() {
     mutationFn: loginApi,
     onSuccess: (data) => {
       setAuth(data.user, data.accessToken);
-      router.push('/images');
+      router.push('/creations');
     },
   });
 }

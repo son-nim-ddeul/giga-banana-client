@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Giga Banana',
   description: 'Giga Banana Client',
+  icons: {
+    icon: '/giga_banana.png',
+    shortcut: '/giga_banana.png',
+    apple: '/giga_banana.png',
+  },
 };
 
 export default function RootLayout({
