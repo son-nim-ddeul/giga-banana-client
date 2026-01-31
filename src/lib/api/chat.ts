@@ -21,6 +21,24 @@ export interface ChatMessage {
   content: string;
   image_url?: string;
   timestamp?: string;
+  error_message?: string;
+}
+
+// Session Events API 응답 타입
+export interface EventContent {
+  message: string;
+  image_upload_url?: string;
+  image_upload_mime_type?: string;
+}
+
+export interface SessionEvent {
+  role: 'user' | 'assistant';
+  content: EventContent;
+  error_message?: string;
+}
+
+export interface SessionEventsResponse {
+  events: SessionEvent[];
 }
 
 export interface ChatRunRequest {
@@ -36,6 +54,17 @@ export interface ChatRunResponse {
   session_id: string;
   response: string;
   metadata?: Record<string, unknown>;
+}
+
+// Validation Error Response (from chat send)
+export interface ValidationError {
+  loc: (string | number)[];
+  msg: string;
+  type: string;
+}
+
+export interface ChatErrorResponse {
+  detail: ValidationError[];
 }
 
 export interface UploadResponse {
@@ -137,10 +166,11 @@ export async function sendChatMessage(request: ChatRunRequest): Promise<ChatRunR
 }
 
 /**
- * Get session history (if API supports it)
+ * Get session events (chat history)
+ * GET /sessions/events/{session_id}
  */
-export async function getSessionHistory(sessionId: string): Promise<ChatMessage[]> {
-  const res = await fetch(`${API_BASE_URL}/sessions/${sessionId}/history`, {
+export async function getSessionEvents(sessionId: string): Promise<ChatMessage[]> {
+  const res = await fetch(`${API_BASE_URL}/sessions/events/${encodeURIComponent(sessionId)}`, {
     method: 'GET',
     headers: {
       accept: 'application/json',
@@ -148,16 +178,23 @@ export async function getSessionHistory(sessionId: string): Promise<ChatMessage[
   });
 
   if (!res.ok) {
-    // If history endpoint doesn't exist, return empty array
+    // If endpoint doesn't exist or session not found, return empty array
     if (res.status === 404) {
       return [];
     }
-    const error = await res.json().catch(() => ({ error: '히스토리를 불러올 수 없습니다.' }));
-    throw new Error(error.error || error.message || '히스토리를 불러올 수 없습니다.');
+    const error = await res.json().catch(() => ({ error: '이벤트를 불러올 수 없습니다.' }));
+    throw new Error(error.error || error.message || '이벤트를 불러올 수 없습니다.');
   }
 
-  const data = await res.json();
-  return data.messages || data.history || [];
+  const data: SessionEventsResponse = await res.json();
+
+  // Convert SessionEvent[] to ChatMessage[]
+  return (data.events || []).map((event) => ({
+    role: event.role,
+    content: event.content?.message || '',
+    image_url: event.content?.image_upload_url,
+    error_message: event.error_message,
+  }));
 }
 
 /**

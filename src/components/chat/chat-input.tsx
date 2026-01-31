@@ -114,54 +114,56 @@ export function ChatInput({
 
 
 
-      {/* Action Buttons */}
-      <div className="flex items-center gap-2 flex-wrap justify-start">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="hidden"
-        />
+      {/* Action Buttons - 이미지가 없을 때만 표시 */}
+      {!uploadedImage && (
+        <div className="flex items-center gap-2 flex-wrap justify-start">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
 
-        {/* Gradient Border Button */}
-        <div
-          className={cn(
-            'relative p-[2px] rounded-xl bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 transition-all',
-            isUploading || disabled
-              ? 'opacity-50'
-              : 'hover:from-blue-500 hover:via-purple-500 hover:to-pink-500 hover:shadow-lg hover:shadow-purple-200 hover:scale-102'
-          )}
-        >
-          <button
-            type="button"
-            onClick={handleFileClick}
-            disabled={isUploading || disabled}
+          {/* Gradient Border Button */}
+          <div
             className={cn(
-              'flex items-center gap-2 px-4 py-2 bg-white rounded-[10px] text-sm font-medium transition-all cursor-pointer w-full',
+              'relative p-[2px] rounded-xl bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 transition-all',
               isUploading || disabled
-                ? 'text-neutral-2 cursor-not-allowed'
-                : 'text-neutral-3 hover:bg-gray-50'
+                ? 'opacity-50'
+                : 'hover:from-blue-500 hover:via-purple-500 hover:to-pink-500 hover:shadow-lg hover:shadow-purple-200 hover:scale-102'
             )}
           >
-            {isUploading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
-                <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent font-semibold">
-                  업로드 중...
-                </span>
-              </>
-            ) : (
-              <>
-                <ImageIcon className="w-4 h-4 text-purple-500" />
-                <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold">
-                  이미지 편집
-                </span>
-              </>
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={handleFileClick}
+              disabled={isUploading || disabled}
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 bg-white rounded-[10px] text-sm font-medium transition-all cursor-pointer w-full',
+                isUploading || disabled
+                  ? 'text-neutral-2 cursor-not-allowed'
+                  : 'text-neutral-3 hover:bg-gray-50'
+              )}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+                  <span className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent font-semibold">
+                    업로드 중...
+                  </span>
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="w-4 h-4 text-purple-500" />
+                  <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent font-semibold">
+                    이미지 편집
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
 
       {/* Main Input Wrapper with Gradient Shadow Background */}

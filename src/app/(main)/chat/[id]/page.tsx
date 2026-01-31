@@ -7,7 +7,7 @@ import { ChatInput } from '@/components/chat/chat-input';
 import { ChatMessages } from '@/components/chat/chat-messages';
 import { useAuthStore, useAuthHydration } from '@/stores/auth-store';
 import { useRouter } from 'next/navigation';
-import { getSessionHistory } from '@/lib/api/chat';
+import { getSessionEvents } from '@/lib/api/chat';
 import { ArrowLeft, Sparkles, Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -41,21 +41,21 @@ export default function ChatPage({ params }: ChatPageProps) {
     }
   }, [isHydrated, isAuthenticated, router]);
 
-  // Load session history on mount
+  // Load session events on mount
   useEffect(() => {
-    async function loadHistory() {
+    async function loadEvents() {
       try {
-        const history = await getSessionHistory(sessionId);
-        if (history.length > 0) {
-          setMessages(history);
+        const events = await getSessionEvents(sessionId);
+        if (events.length > 0) {
+          setMessages(events);
         }
       } catch (err) {
-        console.error('Failed to load session history:', err);
+        console.error('Failed to load session events:', err);
       }
     }
 
     if (isAuthenticated && sessionId) {
-      loadHistory();
+      loadEvents();
     }
   }, [sessionId, isAuthenticated, setMessages]);
 
