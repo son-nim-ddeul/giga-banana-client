@@ -1,9 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { User, Bot } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { User, Bot, ImageOff } from 'lucide-react';
 import type { ChatMessage } from '@/lib/api/chat';
 
 interface ChatMessagesProps {
@@ -18,9 +18,12 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
 
   return (
     <div className="flex flex-col gap-6 py-6">
-      {messages.map((message, index) => (
-        <MessageBubble key={index} message={message} />
-      ))}
+      {messages.map((message, index) => {
+        if (message.role === 'user') {
+          return <UserMessage key={index} message={message} />;
+        }
+        return <AgentMessage key={index} message={message} />;
+      })}
 
       {/* Loading indicator */}
       {isLoading && (
@@ -45,68 +48,105 @@ export function ChatMessages({ messages, isLoading }: ChatMessagesProps) {
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
-  const isUser = message.role === 'user';
+// 이미지 로딩 실패 대체 컴포넌트
+function ImagePlaceholder() {
+  return (
+    <div className="w-[100px] h-[100px] flex flex-col items-center justify-center bg-neutral-1 border border-neutral-2/20 rounded-xl text-neutral-2">
+      <ImageOff className="w-5 h-5 mb-2 opacity-50" />
+      <span className="text-xs">이미지를 불러올 수 없습니다</span>
+    </div>
+  );
+}
+
+// 공통 이미지 컴포넌트
+function MessageImage({ imageUrl }: { imageUrl: string }) {
+  const [imageError, setImageError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  if (imageError) {
+    return (
+      <div className="mb-3">
+        <ImagePlaceholder />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-3 relative w-[200px] h-[200px] rounded-xl overflow-hidden bg-neutral-1">
+      <Image
+        src={imageUrl}
+        alt="Attached"
+        fill
+        className="object-cover"
+        onError={() => setImageError(true)}
+        onLoad={() => setIsLoading(false)}
+        unoptimized
+      />
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-neutral-1">
+          <div className="w-6 h-6 border-2 border-primary-2 border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 유저 메시지 컴포넌트
+function UserMessage({ message }: { message: ChatMessage }) {
+  const hasImage = !!message.image_url;
+  const hasText = !!message.content?.trim();
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn('flex gap-4', isUser && 'flex-row-reverse')}
+      className="flex gap-4 flex-row-reverse"
     >
       {/* Avatar */}
-      <div
-        className={cn(
-          'w-10 h-10 rounded-full flex items-center justify-center shrink-0',
-          isUser ? 'bg-primary-2' : 'bg-primary-1'
-        )}
-      >
-        {isUser ? (
-          <User className="w-5 h-5 text-white" />
-        ) : (
-          <Bot className="w-5 h-5 text-primary-2" />
-        )}
+      <div className="w-10 h-10 rounded-full bg-primary-3 flex items-center justify-center shrink-0">
+        <User className="w-5 h-5 text-white" />
       </div>
 
       {/* Message Content */}
-      <div
-        className={cn(
-          'flex-1 max-w-[80%] rounded-2xl p-4',
-          isUser
-            ? 'bg-primary-2 text-white rounded-tr-none'
-            : 'bg-neutral-1 text-neutral-3 rounded-tl-none'
-        )}
-      >
-        {/* Attached Image */}
-        {message.image_url && (
-          <div className="mb-3 relative aspect-video w-full max-w-sm rounded-xl overflow-hidden">
-            <Image
-              src={message.image_url}
-              alt="Attached"
-              fill
-              className="object-cover"
-            />
-          </div>
-        )}
+      {hasImage ? (
+        <div className="flex justify-center items-center">
+          <MessageImage imageUrl={message.image_url!} />
+        </div>
+      ) : hasText ? (
+        <div className="flex-1 max-w-[80%] rounded-2xl p-4 bg-primary-1 text-gray-800 rounded-tr-none">
+          <p className="whitespace-pre-wrap leading-relaxed text-gray-800">{message.content}</p>
+        </div>
+      ) : null}
+    </motion.div>
+  );
+}
 
-        {/* Text Content */}
-        <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+// 에이전트 메시지 컴포넌트
+function AgentMessage({ message }: { message: ChatMessage }) {
+  const hasImage = !!message.image_url;
+  const hasText = !!message.content?.trim();
 
-        {/* Timestamp */}
-        {message.timestamp && (
-          <p
-            className={cn(
-              'text-xs mt-2',
-              isUser ? 'text-white/60' : 'text-neutral-2'
-            )}
-          >
-            {new Date(message.timestamp).toLocaleTimeString('ko-KR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </p>
-        )}
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex gap-4"
+    >
+      {/* Avatar */}
+      <div className="w-10 h-10 rounded-full bg-primary-1 flex items-center justify-center shrink-0">
+        <Bot className="w-5 h-5 text-primary-2" />
       </div>
+
+      {/* Message Content */}
+      {hasImage ? (
+        <div className="flex justify-center items-center">
+          <MessageImage imageUrl={message.image_url!} />
+        </div>
+      ) : hasText ? (
+        <div className="flex-1 max-w-[80%] rounded-2xl p-4 bg-neutral-1 text-neutral-3 rounded-tl-none">
+          <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+        </div>
+      ) : null}
     </motion.div>
   );
 }

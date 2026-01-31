@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Plus, MessageSquare, Image as ImageIcon, LogOut, ChevronDown, Loader2 } from 'lucide-react';
@@ -30,24 +30,37 @@ export function Sidebar({ user }: SidebarProps) {
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [isChatExpanded, setIsChatExpanded] = useState(true);
 
+  // Fetch sessions function
+  const fetchSessions = useCallback(async () => {
+    if (!isHydrated || !currentUser?.id) return;
+
+    setIsLoadingSessions(true);
+    try {
+      const data = await getSessions(currentUser.id);
+      setSessions(data);
+    } catch (err) {
+      console.error('Failed to fetch sessions:', err);
+    } finally {
+      setIsLoadingSessions(false);
+    }
+  }, [isHydrated, currentUser?.id]);
+
   // Fetch sessions when user is available and hydrated
   useEffect(() => {
-    async function fetchSessions() {
-      if (!isHydrated || !currentUser?.id) return;
-
-      setIsLoadingSessions(true);
-      try {
-        const data = await getSessions(currentUser.id);
-        setSessions(data);
-      } catch (err) {
-        console.error('Failed to fetch sessions:', err);
-      } finally {
-        setIsLoadingSessions(false);
-      }
-    }
-
     fetchSessions();
-  }, [isHydrated, currentUser?.id]);
+  }, [fetchSessions]);
+
+  // Listen for session creation event to refresh list
+  useEffect(() => {
+    const handleSessionCreated = () => {
+      fetchSessions();
+    };
+
+    window.addEventListener('session-created', handleSessionCreated);
+    return () => {
+      window.removeEventListener('session-created', handleSessionCreated);
+    };
+  }, [fetchSessions]);
 
   const getInitials = (name: string) => {
     return name

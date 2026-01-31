@@ -13,6 +13,7 @@ import {
 interface UseChatOptions {
   sessionId?: string;
   onSessionCreated?: (sessionId: string) => void;
+  onSessionListRefresh?: () => void;
 }
 
 interface UploadedImage {
@@ -38,7 +39,7 @@ interface UseChatReturn {
 }
 
 export function useChat(options: UseChatOptions = {}): UseChatReturn {
-  const { sessionId: initialSessionId, onSessionCreated } = options;
+  const { sessionId: initialSessionId, onSessionCreated, onSessionListRefresh } = options;
   const router = useRouter();
   const { user } = useAuthStore();
 
@@ -128,14 +129,21 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           currentSessionId = sessionData.session_id;
           sessionIdRef.current = currentSessionId;
 
-          // Navigate to the session page
+          // Notify parent component about session creation
           if (onSessionCreated) {
             onSessionCreated(currentSessionId);
           }
-          router.push(`/chat/${currentSessionId}`);
 
-          // Wait 2 seconds for session to be fully ready
+          // 세션 생성 후 2초 대기 (바로 조회하면 없을 수 있음)
           await new Promise((resolve) => setTimeout(resolve, 2000));
+
+          // 세션 리스트 새로고침 (window 이벤트 발생)
+          window.dispatchEvent(new CustomEvent('session-created'));
+
+          // 콜백도 호출 (있는 경우)
+          if (onSessionListRefresh) {
+            onSessionListRefresh();
+          }
         }
 
         // Send the message
@@ -143,7 +151,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           user_id: user.id,
           session_id: currentSessionId,
           user_message: content.trim(),
-          context: {},
         };
 
         // Add image if uploaded (send S3 URI to API)
@@ -152,12 +159,22 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           request.image_upload_mime_type = uploadedImage.mimeType || 'image/jpeg';
         }
 
-        const response = await sendChatMessage(request);
+        // 메시지 전송 시작 (비동기로 처리)
+        const messagePromise = sendChatMessage(request);
+
+        // 새 세션이면 페이지 이동 (메시지 전송은 백그라운드에서 계속)
+        if (!initialSessionId && currentSessionId) {
+          router.push(`/chat/${currentSessionId}`);
+        }
+
+        // 메시지 전송 완료 대기
+        const response = await messagePromise;
 
         // Add assistant response
         const assistantMessage: ChatMessage = {
           role: 'assistant',
-          content: response.response,
+          content: response.response_message || '',
+          image_url: response.response_image_url || undefined,
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
@@ -173,7 +190,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setIsLoading(false);
       }
     },
-    [user?.id, uploadedImage, onSessionCreated, router, clearUploadedImage]
+    [user?.id, uploadedImage, onSessionCreated, onSessionListRefresh, router, clearUploadedImage, initialSessionId]
   );
 
   return {

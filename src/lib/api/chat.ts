@@ -26,15 +26,15 @@ export interface ChatMessage {
 
 // Session Events API 응답 타입
 export interface EventContent {
-  message: string;
-  image_upload_url?: string;
-  image_upload_mime_type?: string;
+  message: string | null;
+  image_upload_url?: string | null;
+  image_upload_mime_type?: string | null;
 }
 
 export interface SessionEvent {
-  role: 'user' | 'assistant';
+  role: 'user' | 'model';
   content: EventContent;
-  error_message?: string;
+  error_message?: string | null;
 }
 
 export interface SessionEventsResponse {
@@ -51,9 +51,8 @@ export interface ChatRunRequest {
 }
 
 export interface ChatRunResponse {
-  session_id: string;
-  response: string;
-  metadata?: Record<string, unknown>;
+  response_message: string;
+  response_image_url: string | null;
 }
 
 // Validation Error Response (from chat send)
@@ -189,11 +188,12 @@ export async function getSessionEvents(sessionId: string): Promise<ChatMessage[]
   const data: SessionEventsResponse = await res.json();
 
   // Convert SessionEvent[] to ChatMessage[]
+  // API의 'model' role을 'assistant'로 변환
   return (data.events || []).map((event) => ({
-    role: event.role,
+    role: event.role === 'model' ? 'assistant' : event.role,
     content: event.content?.message || '',
-    image_url: event.content?.image_upload_url,
-    error_message: event.error_message,
+    image_url: event.content?.image_upload_url || undefined,
+    error_message: event.error_message || undefined,
   }));
 }
 
