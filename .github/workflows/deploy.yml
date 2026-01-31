@@ -1,13 +1,10 @@
-name: Deploy to EC2
+name: Build and Deploy
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
-env:
-  DOCKER_IMAGE: giga-banana-client
 
 jobs:
   build-and-deploy:
@@ -29,55 +26,72 @@ jobs:
             --build-arg DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }} \
             --build-arg DATABASE_NAME=${{ secrets.DATABASE_NAME }} \
             --build-arg JWT_SECRET=${{ secrets.JWT_SECRET }} \
-            -t ${{ env.DOCKER_IMAGE }}:latest \
-            -t ${{ env.DOCKER_IMAGE }}:${{ github.sha }} \
-            .
+            -t giga-banana-client:latest .
 
       - name: Save Docker image
         run: |
-          docker save ${{ env.DOCKER_IMAGE }}:latest | gzip > image.tar.gz
+          docker save giga-banana-client:latest | gzip > image.tar.gz
 
-      - name: Copy image to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "image.tar.gz,docker-compose.yml"
-          target: "~/app"
+      - name: Create .env file
+        run: |
+          cat > .env << EOF
+          DATABASE_HOST=${{ secrets.DATABASE_HOST }}
+          DATABASE_PORT=${{ secrets.DATABASE_PORT }}
+          DATABASE_USER=${{ secrets.DATABASE_USER }}
+          DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_NAME=${{ secrets.DATABASE_NAME }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          EOF
 
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd ~/app
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts || true
 
+      - name: Deploy to server
+        env:
+          SSH_HOST: ${{ secrets.EC2_HOST }}
+          SSH_USER: ${{ secrets.EC2_USERNAME }}
+          SSH_PORT: "22"
+        run: |
+          # Transfer Docker image and .env file to server
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P ${SSH_PORT} image.tar.gz $SSH_USER@$SSH_HOST:/tmp/
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -P ${SSH_PORT} .env $SSH_USER@$SSH_HOST:~/app/.env
+
+          # SSH into server and deploy
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -p ${SSH_PORT} $SSH_USER@$SSH_HOST << 'ENDSSH'
             # Load Docker image
-            docker load < image.tar.gz
-
-            # Create .env file
-            cat > .env << EOF
-            DATABASE_HOST=${{ secrets.DATABASE_HOST }}
-            DATABASE_PORT=${{ secrets.DATABASE_PORT }}
-            DATABASE_USER=${{ secrets.DATABASE_USER }}
-            DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
-            DATABASE_NAME=${{ secrets.DATABASE_NAME }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            EOF
-
+            docker load < /tmp/image.tar.gz
+            rm /tmp/image.tar.gz
+            
+            # Create app directory
+            mkdir -p ~/app
+            cd ~/app
+            
             # Stop and remove existing container
-            docker compose down || true
-
-            # Start new container
-            docker compose up -d
-
-            # Clean up
-            rm -f image.tar.gz
-
-            # Remove unused images
+            docker stop giga-banana-client || true
+            docker rm giga-banana-client || true
+            
+            # Run new container
+            docker run -d \
+              --name giga-banana-client \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              --env-file .env \
+              -e NODE_ENV=production \
+              giga-banana-client:latest
+            
+            # Clean up old images
             docker image prune -f
+            
+            echo "Deployment completed!"
+          ENDSSH
 
-            echo "Deployment completed successfully!"
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f image.tar.gz
+          rm -f .env
+          rm -f ~/.ssh/deploy_key
