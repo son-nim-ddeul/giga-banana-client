@@ -1,6 +1,7 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
+import { usePendingMessageStore } from '@/stores/pending-message-store';
 import {
   uploadImage,
   createSession,
@@ -51,6 +52,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
   const { sessionId: initialSessionId, onSessionCreated, onSessionListRefresh } = options;
   const router = useRouter();
   const { user } = useAuthStore();
+  const { pendingMessage, clearPendingMessage, setPendingMessage } = usePendingMessageStore();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +69,66 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
 
   const sessionIdRef = useRef<string | null>(initialSessionId || null);
   const analysisPromiseRef = useRef<Promise<string[]> | null>(null);
+  const pendingMessageProcessedRef = useRef(false);
+
+  /**
+   * Process pending message when navigating to chat/[id] page
+   */
+  useEffect(() => {
+    if (
+      initialSessionId &&
+      pendingMessage &&
+      !pendingMessageProcessedRef.current &&
+      user?.id
+    ) {
+      pendingMessageProcessedRef.current = true;
+
+      // Add user message to UI
+      const userMessage: ChatMessage = {
+        role: 'user',
+        content: pendingMessage.content,
+        image_url: pendingMessage.image?.uri || undefined,
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+      setIsLoading(true);
+
+      // Send the message
+      const request: ChatRunRequest = {
+        user_id: user.id,
+        session_id: initialSessionId,
+        user_message: pendingMessage.content,
+      };
+
+      if (pendingMessage.image) {
+        request.image_upload_url = pendingMessage.image.uri;
+        request.image_upload_mime_type = pendingMessage.image.mimeType || 'image/jpeg';
+      }
+
+      // Clear pending message
+      clearPendingMessage();
+
+      // Send request
+      sendChatMessage(request)
+        .then((response) => {
+          const assistantMessage: ChatMessage = {
+            role: 'assistant',
+            content: response.response_message || '',
+            image_url: response.response_image_url || undefined,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages((prev) => [...prev, assistantMessage]);
+        })
+        .catch((err) => {
+          const message = err instanceof Error ? err.message : '메시지 전송에 실패했습니다.';
+          setError(message);
+          setMessages((prev) => prev.slice(0, -1));
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [initialSessionId, pendingMessage, user?.id, clearPendingMessage]);
 
   /**
    * Upload a file and start background analysis
@@ -167,14 +229,10 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       setIsLoading(true);
       setError(null);
 
-      // Add user message to UI immediately (use S3 URI for persistence)
-      const userMessage: ChatMessage = {
-        role: 'user',
-        content: content.trim(),
-        image_url: uploadedImage?.uri || undefined, // Use S3 URI instead of blob URL
-        timestamp: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, userMessage]);
+      // Store image info before clearing
+      const imageInfo = uploadedImage
+        ? { uri: uploadedImage.uri, mimeType: uploadedImage.mimeType }
+        : undefined;
 
       // Clear uploaded image immediately when sending message
       clearUploadedImage();
@@ -182,7 +240,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       try {
         let currentSessionId = sessionIdRef.current;
 
-        // If no session, create one first
+        // If no session (new chat), create session and navigate first
         if (!currentSessionId) {
           const sessionData = await createSession(user.id);
           currentSessionId = sessionData.session_id;
@@ -193,17 +251,36 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
             onSessionCreated(currentSessionId);
           }
 
-          // 세션 생성 후 2초 대기 (바로 조회하면 없을 수 있음)
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          // Save pending message to store
+          setPendingMessage({
+            content: content.trim(),
+            image: imageInfo,
+          });
 
-          // 세션 리스트 새로고침 (window 이벤트 발생)
-          window.dispatchEvent(new CustomEvent('session-created'));
+          // Navigate to chat page immediately
+          router.push(`/chat/${currentSessionId}`);
 
-          // 콜백도 호출 (있는 경우)
-          if (onSessionListRefresh) {
-            onSessionListRefresh();
-          }
+          // 세션 생성 후 세션 리스트 새로고침 이벤트 발생
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('session-created'));
+            if (onSessionListRefresh) {
+              onSessionListRefresh();
+            }
+          }, 2000);
+
+          setIsLoading(false);
+          return;
         }
+
+        // Existing session - send message directly
+        // Add user message to UI immediately (use S3 URI for persistence)
+        const userMessage: ChatMessage = {
+          role: 'user',
+          content: content.trim(),
+          image_url: imageInfo?.uri || undefined,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, userMessage]);
 
         // Send the message
         const request: ChatRunRequest = {
@@ -213,9 +290,9 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         };
 
         // Add image if uploaded (send S3 URI to API)
-        if (uploadedImage) {
-          request.image_upload_url = uploadedImage.uri;
-          request.image_upload_mime_type = uploadedImage.mimeType || 'image/jpeg';
+        if (imageInfo) {
+          request.image_upload_url = imageInfo.uri;
+          request.image_upload_mime_type = imageInfo.mimeType || 'image/jpeg';
         }
 
         // 메시지 전송 및 응답 대기
@@ -229,11 +306,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
-
-        // 새 세션이면 응답 받은 후 페이지 이동
-        if (!initialSessionId && currentSessionId) {
-          router.push(`/chat/${currentSessionId}`);
-        }
       } catch (err) {
         const message = err instanceof Error ? err.message : '메시지 전송에 실패했습니다.';
         setError(message);
@@ -243,7 +315,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         setIsLoading(false);
       }
     },
-    [user?.id, uploadedImage, onSessionCreated, onSessionListRefresh, router, clearUploadedImage, initialSessionId]
+    [user?.id, uploadedImage, onSessionCreated, onSessionListRefresh, router, clearUploadedImage, setPendingMessage]
   );
 
   return {
